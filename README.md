@@ -1,6 +1,13 @@
 📊 YKS Deneme Takip ve Analiz Sistemi
 Bu proje, YKS'ye hazırlanan öğrencilerin deneme sınavı sonuçlarını Google Sheets üzerinden alarak detaylı net ve konu analizi yapan, sonuçları grafiklerle görselleştiren ve kişiselleştirilmiş çalışma önerileri sunan modüler bir Python uygulamasıdır.
 
+🛠️ Kullanılan Teknolojiler
+- **Veri Analizi:** Pandas, NumPy, SciPy
+- **Görselleştirme:** Matplotlib, Seaborn
+- **Veri Kaynağı:** Google Sheets API (gspread)
+- **Ortam Yönetimi:** python-dotenv
+- **Çalışma Ortamı:** Jupyter Notebook
+
 🎯 Temel Özellikler
 Veri Yönetimi: Google Sheets entegrasyonu sayesinde verilerinizi bulutta tutabilir ve her yerden erişebilirsiniz.
 
