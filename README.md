@@ -31,9 +31,14 @@ Rich Visualization: It allows you to see your performance clearly with more than
 
 🏗️ Project Architecture
 The project is designed in a modular structure, with each module performing a specific task:
+🏗️ Project Architecture
+The project is designed in a modular structure, with each module performing a specific task:
 
 ders_takip/
 │
+├── 📂 analysis/             # Analysis scripts
+│   ├── net_analyzer.py      # Net statistics, trend analysis
+│   └── topic_analyzer.py    # Subject frequencies, study plan
 ├── 📂 analysis/             # Analysis scripts
 │   ├── net_analyzer.py      # Net statistics, trend analysis
 │   └── topic_analyzer.py    # Subject frequencies, study plan
@@ -41,7 +46,13 @@ ders_takip/
 ├── 📂 data/                 # Data loading and cleaning
 │   ├── data_cleaner.py      # Data cleaning and validation
 │   └── data_loader.py       # Reading data from Google Sheets
+├── 📂 data/                 # Data loading and cleaning
+│   ├── data_cleaner.py      # Data cleaning and validation
+│   └── data_loader.py       # Reading data from Google Sheets
 │
+├── 📂 output/                # Analysis outputs
+│   ├── 📂 charts/             # Generated graphs
+│   └── 📂 data/               # Cleaned data and reports
 ├── 📂 output/                # Analysis outputs
 │   ├── 📂 charts/             # Generated graphs
 │   └── 📂 data/               # Cleaned data and reports
@@ -49,7 +60,17 @@ ders_takip/
 ├── 📂 visualization/         # Visualization scripts
 │   ├── net_charts.py        # Net graphs (line, bar, etc.)
 │   └── topic_charts.py      # Subject graphs (bar, heatmap, etc.)
+├── 📂 visualization/         # Visualization scripts
+│   ├── net_charts.py        # Net graphs (line, bar, etc.)
+│   └── topic_charts.py      # Subject graphs (bar, heatmap, etc.)
 │
+├── 📜 config.py              # Center for all settings and constants
+├── 📜 credentials.json      # Google API authorization key
+├── 📜 main.ipynb             # Main Jupyter Notebook where all modules are used
+├── 📜 requirements.txt       # Required Python libraries
+└── 📜 README.md              # This file
+🚀 Installation and Usage
+1. Cloning the Project
 ├── 📜 config.py              # Center for all settings and constants
 ├── 📜 credentials.json      # Google API authorization key
 ├── 📜 main.ipynb             # Main Jupyter Notebook where all modules are used
@@ -63,44 +84,65 @@ git clone <repo_url>
 cd ders_takip
 2. Installing Required Libraries
 For the project to work, the libraries specified in the requirements.txt file must be installed.
+2. Installing Required Libraries
+For the project to work, the libraries specified in the requirements.txt file must be installed.
 
 Bash
 
 pip install -r requirements.txt
 3. Google Sheets API Settings
 You need to create and authorize a service account for the project to access Google Sheets.
+3. Google Sheets API Settings
+You need to create and authorize a service account for the project to access Google Sheets.
 
 a) Google Cloud Console:
 
 Create a new project in the Google Cloud Console.
+Create a new project in the Google Cloud Console.
 
+Enable "Google Sheets API" and "Google Drive API" from the "APIs & Services" > "Library" section.
 Enable "Google Sheets API" and "Google Drive API" from the "APIs & Services" > "Library" section.
 
 Go to the "Credentials" section and create a new "Service Account".
+Go to the "Credentials" section and create a new "Service Account".
 
+Give "Editor" permission to the service account you created.
 Give "Editor" permission to the service account you created.
 
 Create a JSON key for the service account, download it, and save it to the project folder as credentials.json.
+Create a JSON key for the service account, download it, and save it to the project folder as credentials.json.
 
+b) Sharing Google Sheets:
 b) Sharing Google Sheets:
 
 Open the Google Sheets file containing your analysis data.
+Open the Google Sheets file containing your analysis data.
 
+Click the "Share" button, add the client_email address from the credentials.json file, and give "Editor" permission.
 Click the "Share" button, add the client_email address from the credentials.json file, and give "Editor" permission.
 
 4. Configuration
 Edit the config.py file with your own information or, as a more secure method, create a .env file and write the variables there.
+4. Configuration
+Edit the config.py file with your own information or, as a more secure method, create a .env file and write the variables there.
 
+.env file example:
 .env file example:
 
 GOOGLE_SHEET_URL="https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID"
 CREDENTIALS_PATH="credentials.json"
 5. Running
 You can run the entire analysis process by running the cells in the main.ipynb Jupyter Notebook in order.
+5. Running
+You can run the entire analysis process by running the cells in the main.ipynb Jupyter Notebook in order.
 
 📊 Sample Outputs
 The project presents your net and subject analysis with both text-based reports and various graphs.
+📊 Sample Outputs
+The project presents your net and subject analysis with both text-based reports and various graphs.
 
+Net Analysis Report
+=== TOTAL NET STATISTICS ===
 Net Analysis Report
 === TOTAL NET STATISTICS ===
   mean: 88.25
@@ -110,8 +152,11 @@ Net Analysis Report
   latest: 87.5
 Subject Analysis Report
 === RECOMMENDED STUDY PLAN ===
+Subject Analysis Report
+=== RECOMMENDED STUDY PLAN ===
 Matematik:
   1. problemler
+     Priority: 🔴 High | Frequency: 4 | ➡️ Constant
      Priority: 🔴 High | Frequency: 4 | ➡️ Constant
   2. olasılık
      Priority: 🔴 High | Frequency: 4 | ➡️ Constant
