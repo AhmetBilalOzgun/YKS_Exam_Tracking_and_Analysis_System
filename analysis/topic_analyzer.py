@@ -1,4 +1,4 @@
-# Konu konu analizler için gerekli fonksiyonlar.
+# Functions required for topic-based analysis.
 
 import pandas as pd
 import numpy as np
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class TopicAnalyzer:
     """
-    Konu bazlı analizler yapan sınıf.
+    Class for topic-based analyses.
     """
     
     def __init__(self, config: Config, exam_type: str = "TYT"):
@@ -22,14 +22,14 @@ class TopicAnalyzer:
 
     def _precompute_all_topic_trends(self, df: pd.DataFrame) -> Dict:
         """
-        DataFrame'i tek seferde tarayarak tüm konuların trend verisini toplar.
+        Scans the DataFrame once and collects trend data for all topics.
         """
         df_sorted = df.sort_values('Tarih').reset_index(drop=True)
         
         all_topic_data = defaultdict(lambda: {
             'appearances': [0] * len(df_sorted), 
             'dates': df_sorted['Tarih'].tolist(),
-            'exam_names': df_sorted['Deneme Adı'].tolist() if 'Deneme Adı' in df_sorted else ['Bilinmiyor'] * len(df_sorted)
+            'exam_names': df_sorted['Deneme Adı'].tolist() if 'Deneme Adı' in df_sorted else ['Unknown'] * len(df_sorted)
         })
 
         for i, row in df_sorted.iterrows():
@@ -45,7 +45,7 @@ class TopicAnalyzer:
 
     def get_most_problematic_topics(self, df: pd.DataFrame, top_n: int = 10) -> List[Tuple[str, int]]:
         """
-        En çok yanlış yapılan konuları bulur.
+        Finds the most frequently wrong topics.
         """
         topic_columns = [col for col in df.columns if '_List' in col]
         all_topics = []
@@ -59,7 +59,7 @@ class TopicAnalyzer:
 
     def identify_weak_areas(self, df: pd.DataFrame, threshold: int = 3) -> Dict[str, List[str]]:
         """
-        Ders bazında zayıf alanları (çok yanlış yapılan konular) belirler.
+        Identifies weak areas (topics with many mistakes) by subject.
         """
         weak_areas = {}
         subjects = self.config.TYT.SUBJECTS if self.exam_type == "TYT" else self.config.AYT.SUBJECTS
@@ -78,11 +78,11 @@ class TopicAnalyzer:
 
     def get_topic_trend_by_exam(self, precomputed_data: Dict, subject: str, topic: str) -> Dict:
         """
-        Ön-hesaplanmış veriyi kullanarak bir konunun trendini hızlıca analiz eder.
+        Quickly analyzes the trend of a topic using precomputed data.
         """
         key = (subject, topic)
         if key not in precomputed_data:
-            return {'trend': 'Veri Yok'}
+            return {'trend': 'No Data'}
 
         topic_data = precomputed_data[key]
         appearances = np.array(topic_data['appearances'])
@@ -91,7 +91,7 @@ class TopicAnalyzer:
 
         indices = np.where(appearances == 1)[0]
         if len(indices) == 0:
-            return {'trend': 'Hiç Tekrarlanmamış'}
+            return {'trend': 'Never Repeated'}
 
         exam_names = [all_exam_names[i] for i in indices]
         exam_dates = [dates[i] for i in indices]
@@ -102,29 +102,29 @@ class TopicAnalyzer:
         recent_exams_window = max(1, total_exams // 4)
         recent_count = np.sum(appearances[-recent_exams_window:])
         
-        trend = "➡️ Sabit"
+        trend = "➡️ Stable"
         if recent_count == 0:
-            trend = "✅ Gelişiyor (Son zamanlarda tekrarlanmamış)"
+            trend = "✅ Improving (Not repeated recently)"
         elif frequency > 1:
             if indices[-1] > total_exams * 0.75 and np.mean(np.diff(indices)) < total_exams / frequency:
-                 trend = "⚠️ Tekrarlıyor (Sık sık yanlış yapılıyor)"
+                 trend = "⚠️ Repeating (Frequently wrong)"
             if recent_count / recent_exams_window > frequency / total_exams:
-                trend = "🚨 Kötüleşiyor (Son zamanlarda daha sık tekrarlanmış)"
+                trend = "🚨 Worsening (Repeated more often recently)"
 
         return {
-            'konu': topic,
-            'ders': subject,
-            'frekans': frequency,
-            'toplam_deneme': total_exams,
-            'son_görülme_index': indices[-1] if len(indices) > 0 else -1,
+            'topic': topic,
+            'subject': subject,
+            'frequency': frequency,
+            'total_exams': total_exams,
+            'last_seen_index': indices[-1] if len(indices) > 0 else -1,
             'trend': trend,
-            'deneme_adları': exam_names,
-            'tarihler': exam_dates
+            'exam_names': exam_names,
+            'dates': exam_dates
         }
 
     def compare_subjects_by_topics(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Dersleri yanlış yapılan konu sayılarına göre karşılaştırır.
+        Compares subjects by the number of wrong topics.
         """
         subjects = self.config.TYT.SUBJECTS if self.exam_type == "TYT" else self.config.AYT.SUBJECTS
         comparison_data = []
@@ -136,19 +136,19 @@ class TopicAnalyzer:
                 total_wrong_topics = df[count_col].sum()
                 unique_wrong_topics = len(set(item for sublist in df[list_col].dropna() for item in sublist))
                 comparison_data.append({
-                    'Ders': subject,
-                    'Toplam Yanlış Sayısı': total_wrong_topics,
-                    'Farklı Yanlış Konu Sayısı': unique_wrong_topics
+                    'Subject': subject,
+                    'Total Wrong Count': total_wrong_topics,
+                    'Unique Wrong Topic Count': unique_wrong_topics
                 })
 
         if not comparison_data:
             return pd.DataFrame()
             
-        return pd.DataFrame(comparison_data).set_index('Ders')
+        return pd.DataFrame(comparison_data).set_index('Subject')
 
     def generate_study_plan(self, df: pd.DataFrame, precomputed_trends: Dict, focus_subjects: Optional[List[str]] = None, max_topics_per_subject: int = 3) -> Dict:
         """
-        Önceliklendirilmiş bir çalışma planı oluşturur.
+        Generates a prioritized study plan.
         """
         all_topics = defaultdict(int)
         subjects_of_topics = {}
@@ -160,7 +160,7 @@ class TopicAnalyzer:
                 subjects_of_topics[topic] = subject
 
         if not all_topics:
-            return {"Genel": [{'sıra': 1, 'konu': 'Harika! Çalışılacak acil bir konu bulunamadı.', 'öncelik': '🟢 Düşük', 'frekans': 0, 'son_durum': '✅'}]}
+            return {"General": [{'order': 1, 'topic': 'Great! No urgent topic to study.', 'priority': '🟢 Low', 'frequency': 0, 'recent_status': '✅'}]}
 
         final_study_plan = {}
         subjects_to_process = focus_subjects or (self.config.TYT.SUBJECTS if self.exam_type == "TYT" else self.config.AYT.SUBJECTS)
@@ -174,31 +174,31 @@ class TopicAnalyzer:
                 if len(subject_plan_items) >= max_topics_per_subject:
                     break
 
-                priority = "🔴 Yüksek"
-                if freq < 3: priority = "🟡 Orta"
-                if freq == 1: priority = "🟢 Düşük"
+                priority = "🔴 High"
+                if freq < 3: priority = "🟡 Medium"
+                if freq == 1: priority = "🟢 Low"
                 
                 trend_info = self.get_topic_trend_by_exam(precomputed_trends, subject, topic)
-                recent_status = trend_info.get('trend', '➡️ Bilinmiyor')
+                recent_status = trend_info.get('trend', '➡️ Unknown')
 
                 subject_plan_items.append({
-                    'konu': topic, 'öncelik': priority, 'frekans': freq,
-                    'son_durum': recent_status, 'sıra': i + 1
+                    'topic': topic, 'priority': priority, 'frequency': freq,
+                    'recent_status': recent_status, 'order': i + 1
                 })
             
             if subject_plan_items:
-                sorted_plan = sorted(subject_plan_items, key=lambda x: (x['öncelik'], -x['frekans']))
+                sorted_plan = sorted(subject_plan_items, key=lambda x: (x['priority'], -x['frequency']))
                 for idx, item in enumerate(sorted_plan):
-                    item['sıra'] = idx + 1
+                    item['order'] = idx + 1
                 final_study_plan[subject] = sorted_plan
                 
         return final_study_plan
 
     def generate_topic_summary_report(self, df: pd.DataFrame) -> Dict:
         """
-        Konu analiziyle ilgili kapsamlı bir özet rapor oluşturur.
+        Creates a comprehensive summary report about topic analysis.
         """
-        # Toplam yanlış yapılan konu sayısını hesapla
+        # Calculate the total number of wrong topics
         topic_count_cols = [col for col in df.columns if '_Count' in col]
         total_wrong_topics = df[topic_count_cols].sum().sum()
 

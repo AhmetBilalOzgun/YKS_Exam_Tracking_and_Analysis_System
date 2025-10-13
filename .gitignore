@@ -1,17 +1,16 @@
-# Python cache
+
 __pycache__/
 *.pyc
 
-# Ortam değişkenleri ve hassas bilgiler
 .env
 credentials.json
 
-# Analiz ve görselleştirme çıktıları
+
 output/
 
-# Jupyter Notebook checkpoints
+
 .ipynb_checkpoints
 
-# IDE/Editör dosyaları
+
 .idea/
 .vscode/

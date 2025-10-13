@@ -1,102 +1,118 @@
-📊 YKS Deneme Takip ve Analiz Sistemi
-Bu proje, YKS'ye hazırlanan öğrencilerin deneme sınavı sonuçlarını Google Sheets üzerinden alarak detaylı net ve konu analizi yapan, sonuçları grafiklerle görselleştiren ve kişiselleştirilmiş çalışma önerileri sunan modüler bir Python uygulamasıdır.
+📊 YKS Practice Exam Tracking and Analysis System
+This project is a modular Python application that retrieves the practice exam results of students preparing for YKS from Google Sheets, performs detailed net and subject analysis, visualizes the results with graphs, and provides personalized study recommendations.
 
-🎯 Temel Özellikler
-Veri Yönetimi: Google Sheets entegrasyonu sayesinde verilerinizi bulutta tutabilir ve her yerden erişebilirsiniz.
+🛠️ Technologies Used
+- **Data Analysis:** Pandas, NumPy, SciPy
+- **Visualization:** Matplotlib, Seaborn
+- **Data Source:** Google Sheets API (gspread)
+- **Environment Management:** python-dotenv
+- **Working Environment:** Jupyter Notebook
 
-Otomatik Veri Temizleme: Yanlış girilen veya eksik verileri otomatik olarak düzelterek analizlerin tutarlı olmasını sağlar.
+Some of the charts:
+![Topic trend chart](./assets/topic-trend.png)
+![Total net chart](./assets/total_net.png)
+![Weakest topics chart](./assets/weakest_topics.png)
+![Subject-based net dashboard](./assets/subject-based_net_dashboard.png)
+![All subjects multi comparison](./assets/all_subjects_multi_comparison.png)
 
-Detaylı Net Analizi: Ders bazında ortalama, standart sapma gibi istatistiklerin yanı sıra, doğrusal regresyon ile netlerinizin gidişatını (trend) analiz eder.
 
-Akıllı Konu Analizi: En çok yanlış yapılan konuları tespit eder, ders bazında zayıf alanlarınızı belirler ve konu bazlı başarı trendinizi analiz eder.
+🎯 Key Features
+Data Management: Thanks to Google Sheets integration, you can store your data in the cloud and access it from anywhere.
 
-Kişiselleştirilmiş Çalışma Planı: Konu analizlerine dayanarak "Çok Acil", "Acil", "Orta" gibi öncelik seviyelerine göre size özel bir çalışma planı oluşturur.
+Automatic Data Cleaning: Ensures the consistency of analyzes by automatically correcting incorrectly entered or missing data.
 
-Zengin Görselleştirme: Matplotlib ve Seaborn kullanılarak oluşturulan 10'dan fazla grafik türü ile performansınızı net bir şekilde görmenizi sağlar.
+Detailed Net Analysis: In addition to statistics such as mean and standard deviation on a course basis, it analyzes the trend of your nets with linear regression.
 
-🏗️ Proje Mimarisi
-Proje, herbiri belirli bir görevi yerine getiren modüler bir yapıda tasarlanmıştır:
+Smart Subject Analysis: It identifies the most frequently incorrect subjects, determines your weak areas on a course basis, and analyzes your subject-based success trend.
+
+Personalized Study Plan: Based on subject analysis, it creates a special study plan for you according to priority levels such as "Very Urgent", "Urgent", "Medium".
+
+Rich Visualization: It allows you to see your performance clearly with more than 10 types of graphs created using Matplotlib and Seaborn.
+
+🏗️ Project Architecture
+The project is designed in a modular structure, with each module performing a specific task:
 
 ders_takip/
 │
-├── 📂 analysis/             # Analiz scriptleri
-│   ├── net_analyzer.py      # Net istatistikleri, trend analizi
-│   └── topic_analyzer.py    # Konu frekansları, çalışma planı
+├── 📂 analysis/             # Analysis scripts
+│   ├── net_analyzer.py      # Net statistics, trend analysis
+│   └── topic_analyzer.py    # Subject frequencies, study plan
 │
-├── 📂 data/                 # Veri yükleme ve temizleme
-│   ├── data_cleaner.py      # Veri temizleme ve doğrulama
-│   └── data_loader.py       # Google Sheets'ten veri okuma
+├── 📂 data/                 # Data loading and cleaning
+│   ├── data_cleaner.py      # Data cleaning and validation
+│   └── data_loader.py       # Reading data from Google Sheets
 │
-├── 📂 output/                # Analiz çıktıları
-│   ├── 📂 charts/             # Oluşturulan grafikler
-│   └── 📂 data/               # Temizlenmiş veriler ve raporlar
+├── 📂 output/                # Analysis outputs
+│   ├── 📂 charts/             # Generated graphs
+│   └── 📂 data/               # Cleaned data and reports
 │
-├── 📂 visualization/         # Görselleştirme scriptleri
-│   ├── net_charts.py        # Net grafikleri (çizgi, sütun vb.)
-│   └── topic_charts.py      # Konu grafikleri (bar, ısı haritası vb.)
+├── 📂 visualization/         # Visualization scripts
+│   ├── net_charts.py        # Net graphs (line, bar, etc.)
+│   └── topic_charts.py      # Subject graphs (bar, heatmap, etc.)
 │
-├── 📜 config.py              # Tüm ayarların ve sabitlerin merkezi
-├── 📜 credentials.json      # Google API yetki anahtarı
-├── 📜 main.ipynb             # Tüm modüllerin kullanıldığı ana Jupyter Notebook
-├── 📜 requirements.txt       # Gerekli Python kütüphaneleri
-└── 📜 README.md              # Bu dosya
-🚀 Kurulum ve Kullanım
-1. Projeyi Klonlama
+├── 📜 config.py              # Center for all settings and constants
+├── 📜 credentials.json      # Google API authorization key
+├── 📜 main.ipynb             # Main Jupyter Notebook where all modules are used
+├── 📜 requirements.txt       # Required Python libraries
+└── 📜 README.md              # This file
+🚀 Installation and Usage
+1. Cloning the Project
 Bash
 
 git clone <repo_url>
 cd ders_takip
-2. Gerekli Kütüphaneleri Yükleme
-Projenin çalışması için requirements.txt dosyasında belirtilen kütüphanelerin yüklü olması gerekir.
+2. Installing Required Libraries
+For the project to work, the libraries specified in the requirements.txt file must be installed.
 
 Bash
 
 pip install -r requirements.txt
-3. Google Sheets API Ayarları
-Projenin Google Sheets'e erişebilmesi için bir servis hesabı oluşturmanız ve yetkilendirmeniz gerekmektedir.
+3. Google Sheets API Settings
+You need to create and authorize a service account for the project to access Google Sheets.
 
 a) Google Cloud Console:
 
-Google Cloud Console'da yeni bir proje oluşturun.
+Create a new project in the Google Cloud Console.
 
-"APIs & Services" > "Library" bölümünden "Google Sheets API" ve "Google Drive API"yi etkinleştirin.
+Enable "Google Sheets API" and "Google Drive API" from the "APIs & Services" > "Library" section.
 
-"Credentials" bölümüne giderek yeni bir "Service Account" oluşturun.
+Go to the "Credentials" section and create a new "Service Account".
 
-Oluşturduğunuz servis hesabına "Editor" yetkisi verin.
+Give "Editor" permission to the service account you created.
 
-Servis hesabı için bir JSON anahtarı oluşturun, indirin ve adını credentials.json olarak proje klasörüne kaydedin.
+Create a JSON key for the service account, download it, and save it to the project folder as credentials.json.
 
-b) Google Sheets'i Paylaşma:
+b) Sharing Google Sheets:
 
-Analiz verilerinizin bulunduğu Google Sheets dosyasını açın.
+Open the Google Sheets file containing your analysis data.
 
-"Share" butonuna tıklayarak credentials.json dosyası içindeki client_email adresini ekleyin ve "Editor" yetkisi verin.
+Click the "Share" button, add the client_email address from the credentials.json file, and give "Editor" permission.
 
-4. Konfigürasyon
-config.py dosyasını kendi bilgilerinize göre düzenleyin veya daha güvenli bir yöntem olarak bir .env dosyası oluşturup değişkenleri oraya yazın.
+4. Configuration
+Edit the config.py file with your own information or, as a more secure method, create a .env file and write the variables there.
 
-.env dosyası örneği:
+.env file example:
 
 GOOGLE_SHEET_URL="https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID"
 CREDENTIALS_PATH="credentials.json"
-5. Çalıştırma
-Tüm analiz sürecini main.ipynb Jupyter Notebook'u üzerinden hücreleri sırayla çalıştırarak yürütebilirsiniz.
+5. Running
+You can run the entire analysis process by running the cells in the main.ipynb Jupyter Notebook in order.
 
-📊 Örnek Çıktılar
-Proje, net ve konu analizlerinizi hem metin tabanlı raporlar hem de çeşitli grafiklerle sunar.
+📊 Sample Outputs
+The project presents your net and subject analysis with both text-based reports and various graphs.
 
-Net Analizi Raporu
-=== TOPLAM NET İSTATİSTİKLERİ ===
+Net Analysis Report
+=== TOTAL NET STATISTICS ===
   mean: 88.25
   std: 4.13
   min: 85.0
   max: 94.25
   latest: 87.5
-Konu Analizi Raporu
-=== ÖNERİLEN ÇALIŞMA PLANI ===
+Subject Analysis Report
+=== RECOMMENDED STUDY PLAN ===
 Matematik:
   1. problemler
-     Öncelik: 🔴 Yüksek | Frekans: 4 | ➡️ Sabit
+     Priority: 🔴 High | Frequency: 4 | ➡️ Constant
   2. olasılık
-     Öncelik: 🔴 Yüksek | Frekans: 4 | ➡️ Sabit
+     Priority: 🔴 High | Frequency: 4 | ➡️ Constant
+

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class DataCleaner:
     """
-    YKS deneme verilerini temizleyen ve dönüştüren sınıf
+    The class responsible for cleaning and validating YKS trial exam data.
     
     Attributes:
         strict_mode (bool): Katı mod - hatalı verileri reddeder
@@ -23,7 +23,7 @@ class DataCleaner:
     
     def __init__(self, config: Config, strict_mode: bool = False, auto_fix: bool = True):
         """
-        DataCleaner başlatıcı
+        DataCleaner startup
     
         Args:
             config: Configuration object
@@ -42,57 +42,57 @@ class DataCleaner:
     
     def clean_full_dataset(self, df: pd.DataFrame, exam_type: str = "TYT") -> pd.DataFrame:
         """
-        Tam veri temizleme pipeline'ı
+        pipeline of all cleaning steps
         
         Args:
-            df: Temizlenecek DataFrame
-            exam_type: "TYT" veya "AYT"
+            df: DataFrame to clean
+            exam_type: "TYT" or "AYT"
             
         Returns:
-            pd.DataFrame: Temizlenmiş DataFrame
+            pd.DataFrame: cleaned DataFrame
         """
-        logger.info(f"{exam_type} verileri temizleniyor...")
+        logger.info(f"{exam_type} Data is getting cleaned...")
         self.cleaning_report = {'rows_removed': 0, 'values_fixed': 0, 'warnings': []}
         
         original_rows = len(df)
 
-        # 0. Temel ön işleme
+        # 0. Basic preprocessing
         df = self.basic_preprocessing(df)
         
-        # 1. Tarih temizleme
+        # 1. Date cleaning
         df = self.clean_dates(df)
         
-        # 2. Eksik değerleri yönet
+        # 2. Handling missing values
         df = self.handle_missing_values(df)
         
-        # 4. Süre değerlerini doğrula 
+        # 4. Validate duration
         df = self.validate_duration(df, exam_type=exam_type)
         
-        # 5. Yanlış konu verilerini parse et
+        # 5. Parse topics
         df = self.parse_all_topics(df, exam_type)
         
-        # 6. Deneme adlarını temizle
+        # 6. Clean exam names
         df = self.clean_exam_names(df)
         
-        # 8. Final validasyon
+        # 8. Final validation
         df = self.validate_data(df)
         
         self.cleaning_report['rows_removed'] = original_rows - len(df)
         
-        logger.info(f"Temizleme tamamlandı: {original_rows} -> {len(df)} satır")
-        logger.info(f"Rapor: {self.cleaning_report}")
+        logger.info(f"Cleanin complete: {original_rows} -> {len(df)} satır")
+        logger.info(f"Report: {self.cleaning_report}")
         
         return df
     
     def clean_dates(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Tarih sütununu temizler ve standardize eder
+        Cleans and standardizes the 'Tarih' column
         
         Args:
             df: DataFrame
             
         Returns:
-            pd.DataFrame: Tarih temizlenmiş DataFrame
+            pd.DataFrame: DataFrame with cleaned 'Tarih' column
         """
         if 'Tarih' not in df.columns:
             logger.warning("Tarih sütunu bulunamadı")
@@ -113,24 +113,24 @@ class DataCleaner:
                 except: continue
             try: return pd.to_datetime(date_str, dayfirst=True)
             except:
-                logger.warning(f"Tarih parse edilemedi: {date_str}")
+                logger.warning(f"Tarih couldn't be parsed: {date_str}")
                 return pd.NaT
         
         df['Tarih'] = df['Tarih'].apply(parse_date)
         
         future_dates = df[df['Tarih'] > pd.Timestamp.now()]
         if len(future_dates) > 0:
-            self.cleaning_report['warnings'].append(f"{len(future_dates)} adet gelecek tarih bulundu")
+            self.cleaning_report['warnings'].append(f"{len(future_dates)} Date(s) in the future found")
         
         old_dates = df[df['Tarih'] < pd.Timestamp(f'{self.config.Cleaning.MIN_YEAR}-01-01')]
         if len(old_dates) > 0:
-            self.cleaning_report['warnings'].append(f"{len(old_dates)} adet 2020 öncesi tarih bulundu")
+            self.cleaning_report['warnings'].append(f"{len(old_dates)} Date(s) older than {self.config.Cleaning.MIN_YEAR} found")
         
         return df
 
     def parse_topics(self, topics_string: str) -> List[str]:
         """
-        Virgülle ayrılmış konu stringini listeye çevirir
+        Parse a comma-separated topic string into a list of cleaned topics
         """
         if pd.isna(topics_string) or topics_string == '': return []
         topics_string = str(topics_string).strip()
@@ -148,22 +148,22 @@ class DataCleaner:
 
     def parse_all_topics(self, df: pd.DataFrame, exam_type: str = "TYT") -> pd.DataFrame:
         """
-        Tüm yanlış konu sütunlarını parse eder
+        Parse all topic columns in the DataFrame
         """
         df = df.copy()
         topic_columns = [col for col in df.columns if 'Yanlış Konular' in col]
         if not topic_columns:
-            logger.warning("Yanlış konu sütunu bulunamadı")
+            logger.warning("Couldn't find 'Yanlış Konular' column to parse")
             return df
         for col in topic_columns:
             df[col + '_List'] = df[col].apply(self.parse_topics)
             df[col + '_Count'] = df[col + '_List'].apply(len)
-        logger.info(f"{len(topic_columns)} adet konu sütunu parse edildi")
+        logger.info(f"{len(topic_columns)} topic columns parsed")
         return df
 
     def validate_duration(self, df: pd.DataFrame, exam_type: str) -> pd.DataFrame:
         """
-        Süre değerlerini doğrular
+        Validates and cleans the 'Süre (dk)' column
         """
         exam_config = self.config.TYT if exam_type == "TYT" else self.config.AYT
         min_duration = exam_config.MIN_DURATION
@@ -182,20 +182,20 @@ class DataCleaner:
         
         short_mask = (df['Süre (dk)'] < 30) & (df['Süre (dk)'] > 0)
         if short_mask.any():
-            self.cleaning_report['warnings'].append(f"{short_mask.sum()} deneme 30 dakikanın altında")
+            self.cleaning_report['warnings'].append(f"{short_mask.sum()} unusually short durations found")
         
         long_tyt = df['Süre (dk)'] > 180
         long_ayt = df['Süre (dk)'] > 220
         
         if long_tyt.any() or long_ayt.any():
-            self.cleaning_report['warnings'].append(f"{(long_tyt | long_ayt).sum()} deneme çok uzun süreli")
+            self.cleaning_report['warnings'].append(f"{(long_tyt | long_ayt).sum()} unusually long durations found")
         
         return df
         
 
     def clean_exam_names(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Deneme adlarını temizler ve standardize eder
+        Cleans and standardizes the 'Deneme Adı' column
         """
         if 'Deneme Adı' not in df.columns: return df
         df = df.copy()
@@ -208,7 +208,7 @@ class DataCleaner:
 
     def handle_missing_values(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Eksik değerleri yönetir
+        Handles missing values based on strict_mode and auto_fix settings
         """
         df = df.copy()
         critical_columns = self.config.Cleaning.CRITICAL_COLUMNS
@@ -218,9 +218,9 @@ class DataCleaner:
         if missing_critical.any():
             if self.strict_mode:
                 df = df[~missing_critical]
-                logger.warning(f"{missing_critical.sum()} satır kritik eksik veri nedeniyle çıkarıldı")
+                logger.warning(f"{missing_critical.sum()} lines removed due to critical missing data")
             else:
-                logger.warning(f"{missing_critical.sum()} satırda kritik eksik veri var")
+                logger.warning(f"{missing_critical.sum()} lines have critical missing data but strict_mode is off")
         net_columns = [col for col in df.columns if 'Net' in col]
         for col in net_columns:
             na_count = df[col].isna().sum()
@@ -231,12 +231,12 @@ class DataCleaner:
 
     def basic_preprocessing(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Temel ön işleme adımları
+        Basic preprocessing steps
         """
         df = df.dropna(how='all')
         if 'Tarih' in df.columns:
             try: df['Tarih'] = pd.to_datetime(df['Tarih'], dayfirst=True, errors='coerce')
-            except Exception as e: logger.warning(f"Tarih dönüşümü yapılamadı: {e}")
+            except Exception as e: logger.warning(f"couldn't transform date: {e}")
         net_columns = [col for col in df.columns if 'Net' in col]
         for col in net_columns:
             df[col] = pd.to_numeric(df[col], errors='coerce')
@@ -246,25 +246,25 @@ class DataCleaner:
 
     def validate_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Final veri doğrulama
+        Final validation to remove completely empty rows
         """
         df = df.copy()
         empty_rows = df.isna().all(axis=1)
         if empty_rows.any():
             df = df[~empty_rows]
-            logger.info(f"{empty_rows.sum()} boş satır kaldırıldı")
+            logger.info(f"{empty_rows.sum()} completely empty rows removed")
         df = df.reset_index(drop=True)
         return df
 
     def get_cleaning_report(self) -> Dict:
         """
-        Temizleme raporunu döndürür
+        Returns the cleaning report
         """
         return self.cleaning_report
 
     def add_derived_features(self, df: pd.DataFrame, exam_type: str = "TYT") -> pd.DataFrame:
         """
-        Türetilmiş özellikler ekler (analiz için faydalı)
+        Adds derived features like week number, month, year, day of week, total wrong topics, exam order
         """
         df = df.copy()
         if 'Tarih' in df.columns and not df['Tarih'].isna().all():
@@ -281,5 +281,5 @@ class DataCleaner:
         if 'Tarih' in df.columns:
             df = df.sort_values('Tarih')
             df['Deneme_Sırası'] = range(1, len(df) + 1)
-        logger.info("Türetilmiş özellikler eklendi")
+        logger.info("Derived features added")
         return df

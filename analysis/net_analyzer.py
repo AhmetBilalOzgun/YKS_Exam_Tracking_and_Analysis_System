@@ -1,6 +1,6 @@
 """
-YKS Analiz Sistemi - Net Analiz Modülü
-Net hesaplamaları, istatistikler ve trend analizleri
+YKS Analysis System - Net Analysis Module
+Net calculations, statistics, and trend analyses
 """
 
 import pandas as pd
@@ -21,23 +21,23 @@ class NetAnalyzer:
     
     def calculate_statistics(self, df: pd.DataFrame, subject: str = "Toplam Net") -> Dict:
         """
-        Belirli bir ders için temel istatistikleri hesaplar
+        Calculates basic statistics for a specific subject
         
         Args:
-            df: Deneme verileri
-            subject: Ders adı (örn: "Toplam Net", "Matematik Net")
+            df: Exam data
+            subject: Subject name (e.g. "Toplam Net", "Matematik Net")
             
         Returns:
-            Dict: İstatistikler dictionary'si
+            Dict: Statistics dictionary
         """
         if subject not in df.columns:
-            logger.error(f"{subject} sütunu bulunamadı")
+            logger.error(f"{subject} column not found")
             return {}
         
         data = df[subject].dropna()
         
         if len(data) == 0:
-            logger.warning(f"{subject} için veri yok")
+            logger.warning(f"No data for {subject}")
             return {}
         
         stats_dict = {
@@ -64,7 +64,7 @@ class NetAnalyzer:
     
     def get_all_subjects_statistics(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Tüm dersler için istatistikleri hesaplar
+        Calculates statistics for all subjects
         """
         net_columns = [col for col in df.columns if 'Net' in col]
         
@@ -85,17 +85,17 @@ class NetAnalyzer:
     
     def get_progression_trend(self, df: pd.DataFrame, subject: str = "Toplam Net") -> Dict:
         """
-        Net değerlerinin zaman içindeki trendini analiz eder
+        Analyzes the trend of net values over time
         """
         if subject not in df.columns:
-            logger.error(f"{subject} sütunu bulunamadı")
+            logger.error(f"{subject} column not found")
             return {}
         
         df_sorted = df.sort_values('Tarih').copy()
         data = df_sorted[subject].dropna()
         
         if len(data) < 2:
-            logger.warning(f"{subject} için yeterli veri yok (en az 2 gerekli)")
+            logger.warning(f"Not enough data for {subject} (at least 2 required)")
             return {}
         
         x = np.arange(len(data))
@@ -103,21 +103,21 @@ class NetAnalyzer:
         
         slope, intercept, r_value, p_value, std_err = linregress(x, y)
         
-        # Trend kategorisi belirleme
-        trend = "Belirsiz" 
+        # Determine trend category
+        trend = "Uncertain" 
         if p_value < self.config.Analysis.TREND_P_VALUE_THRESHOLD:
             if slope > self.config.Analysis.TREND_STRONG_SLOPE:
-                trend = "Güçlü Artış"
+                trend = "Strong Increase"
             elif slope > self.config.Analysis.TREND_LIGHT_SLOPE:
-                trend = "Hafif Artış"
+                trend = "Slight Increase"
             elif slope < -self.config.Analysis.TREND_STRONG_SLOPE:
-                trend = "Güçlü Düşüş"
+                trend = "Strong Decrease"
             elif slope < -self.config.Analysis.TREND_LIGHT_SLOPE:
-                trend = "Hafif Düşüş"
+                trend = "Slight Decrease"
             else:
-                trend = "Sabit"
+                trend = "Stable"
         else:
-            trend = "İstatistiksel olarak anlamsız"
+            trend = "Statistically insignificant"
         # --------------------------------
 
         next_prediction = slope * len(data) + intercept
@@ -138,7 +138,7 @@ class NetAnalyzer:
 
     def get_all_subjects_trends(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Tüm dersler için trend analizi
+        Trend analysis for all subjects
         """
         net_columns = [col for col in df.columns if 'Net' in col]
         
@@ -159,7 +159,7 @@ class NetAnalyzer:
     
     def get_exam_comparison(self, df: pd.DataFrame, n_exams: int = 5) -> pd.DataFrame:
         """
-        Son N denemeyi karşılaştırır
+        Compares the last N exams
         """
         df_sorted = df.sort_values('Tarih').tail(n_exams).copy()
         
@@ -174,7 +174,7 @@ class NetAnalyzer:
     def calculate_improvement_rate(self, df: pd.DataFrame, subject: str = "Toplam Net", 
                                    window: int = 3) -> Dict:
         """
-        Son N denemeye göre ilerleme oranını hesaplar
+        Calculates the improvement rate based on the last N exams
         """
         if subject not in df.columns: return {}
         
@@ -182,7 +182,7 @@ class NetAnalyzer:
         data = df_sorted[subject].dropna()
         
         if len(data) < window:
-            logger.warning(f"Yeterli veri yok (gerekli: {window}, mevcut: {len(data)})")
+            logger.warning(f"Not enough data (required: {window}, available: {len(data)})")
             return {}
         
         recent = data.tail(window)
@@ -199,13 +199,13 @@ class NetAnalyzer:
         }
         
         if improvement['absolute_change'] > 5:
-            improvement['interpretation'] = "Harika! Önemli ilerleme var 🚀"
+            improvement['interpretation'] = "Great! Significant improvement 🚀"
         elif improvement['absolute_change'] > 2:
-            improvement['interpretation'] = "İyi! İlerleme devam ediyor 👍"
+            improvement['interpretation'] = "Good! Improvement continues 👍"
         elif improvement['absolute_change'] > -2:
-            improvement['interpretation'] = "Sabit performans 📊"
+            improvement['interpretation'] = "Stable performance 📊"
         else:
-            improvement['interpretation'] = "Dikkat! Gerileme var, konuları tekrar et ⚠️"
+            improvement['interpretation'] = "Warning! Regression detected, review topics ⚠️"
         
         return improvement
     
@@ -221,14 +221,14 @@ class NetAnalyzer:
                 'subject': subject,
                 'mean': row['mean'],
                 'latest': row['latest'],
-                'trend': all_trends_df.loc[subject, 'trend'] if subject in all_trends_df.index else 'Belirsiz'
+                'trend': all_trends_df.loc[subject, 'trend'] if subject in all_trends_df.index else 'Uncertain'
             })
         weak_subjects.sort(key=lambda x: x['mean'])
         return weak_subjects
     
     def identify_strong_subjects(self, df: pd.DataFrame) -> List[Dict]:
         """
-        Güçlü dersleri belirler.
+        Identifies strong subjects.
         """
         all_stats_df = self.get_all_subjects_statistics(df)
         all_trends_df = self.get_all_subjects_trends(df)
@@ -242,28 +242,28 @@ class NetAnalyzer:
                 'subject': subject,
                 'mean': row['mean'],
                 'latest': row['latest'],
-                'trend': all_trends_df.loc[subject, 'trend'] if subject in all_trends_df.index else 'Belirsiz'
+                'trend': all_trends_df.loc[subject, 'trend'] if subject in all_trends_df.index else 'Uncertain'
             })
         strong_subjects.sort(key=lambda x: x['mean'], reverse=True)
         return strong_subjects
     
     def calculate_consistency_score(self, df: pd.DataFrame, subject: str = "Toplam Net") -> Dict:
         """
-        Tutarlılık skoru hesaplar
+        Calculates consistency score
         """
         stats = self.calculate_statistics(df, subject)
         if not stats: return {}
         cv = stats['cv']
         if cv < 10:
-            consistency, score = "Çok Tutarlı", 5
+            consistency, score = "Very Consistent", 5
         elif cv < 20:
-            consistency, score = "Tutarlı", 4
+            consistency, score = "Consistent", 4
         elif cv < 30:
-            consistency, score = "Orta", 3
+            consistency, score = "Medium", 3
         elif cv < 40:
-            consistency, score = "Dalgalı", 2
+            consistency, score = "Fluctuating", 2
         else:
-            consistency, score = "Çok Dalgalı", 1
+            consistency, score = "Very Fluctuating", 1
         return {
             'subject': subject, 'cv': cv, 'consistency': consistency,
             'score': score, 'std': stats['std'], 'mean': stats['mean']
@@ -271,7 +271,7 @@ class NetAnalyzer:
     
     def predict_next_exam(self, df: pd.DataFrame, subject: str = "Toplam Net") -> Dict:
         """
-        Bir sonraki deneme için tahmin yapar
+        Makes a prediction for the next exam
         """
         trend_info = self.get_progression_trend(df, subject)
         stats = self.calculate_statistics(df, subject)
@@ -290,10 +290,10 @@ class NetAnalyzer:
     
     def get_time_based_analysis(self, df: pd.DataFrame, subject: str = "Toplam Net") -> Dict:
         """
-        Zamana dayalı analiz (hafta/ay bazlı)
+        Time-based analysis (weekly/monthly)
         """
         if 'Tarih' not in df.columns:
-            logger.warning("Tarih sütunu yok, zaman bazlı analiz yapılamaz")
+            logger.warning("No 'Tarih' column, time-based analysis cannot be performed")
             return {}
         df_copy = df.copy()
         df_copy['Hafta'] = df_copy['Tarih'].dt.isocalendar().week
@@ -310,7 +310,7 @@ class NetAnalyzer:
     def compare_to_target(self, df: pd.DataFrame, target_net: float, 
                          subject: str = "Toplam Net") -> Dict:
         """
-        Hedefe göre performans analizi
+        Performance analysis according to the target
         """
         stats = self.calculate_statistics(df, subject)
         if not stats: return {}
@@ -325,18 +325,18 @@ class NetAnalyzer:
             'achievable': gap <= trend['slope'] * 10 if trend and trend['slope'] > 0 else False
         }
         if gap <= 0:
-            comparison['status'] = "🎉 Hedef aşıldı!"
+            comparison['status'] = "🎉 Target exceeded!"
         elif gap_percentage < 10:
-            comparison['status'] = "🔥 Hedefe çok yakınsın!"
+            comparison['status'] = "🔥 Very close to the target!"
         elif gap_percentage < 25:
-            comparison['status'] = "💪 İyi gidiyorsun, devam et!"
+            comparison['status'] = "💪 Going well, keep it up!"
         else:
-            comparison['status'] = "📚 Daha fazla çalışman gerekiyor"
+            comparison['status'] = "📚 You need to study more"
         return comparison
     
     def generate_summary_report(self, df: pd.DataFrame) -> Dict:
         """
-        Kapsamlı özet rapor oluşturur
+        Generates a comprehensive summary report
         """
         report = {
             'exam_type': self.exam_type,
