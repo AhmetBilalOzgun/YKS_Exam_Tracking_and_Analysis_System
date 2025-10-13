@@ -50,7 +50,7 @@ ders_takip/
 
 ### 1. Cloning the Project
 ```bash
-git clone <repo_url>
+git clone <https://github.com/AhmetBilalOzgun/YKS-Deneme-Takip-ve-Analiz-Sistemi>
 cd ders_takip
 ```
 
